@@ -18,7 +18,7 @@
 
 @section Scripts
 {
-    <script src="~/js/bswindow/bswindow.js" asp-append-version="true"></script>
+    <script src="~/lib/bswindow/bswindow.js" asp-append-version="true"></script>
     <script type="text/javascript">
         var ModelName = "TaskTypeMapping";
         function BulkUpdateTaskTypeMappingTaskMasterJsonSchema(dt) {
@@ -28,7 +28,7 @@
                 selected_pkeys.push(dt.data()[i]["TaskTypeMappingId"]);
             });
 
-            bsWindow.prompt('Enter JSON Here', 'superunknown', 'Who is it?!', function (res) {
+            bsWindow.prompt('', '', 'Enter JSON', function (res) {
                 if (res == null) {
                     toastr.warning('No Json Entered. Update Cancelled');
                     return;

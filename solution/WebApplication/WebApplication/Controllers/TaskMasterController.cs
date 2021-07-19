@@ -73,7 +73,7 @@ namespace WebApplication.Controllers
                 ViewData["TaskGroupId"] = new SelectList(_context.TaskGroup.OrderBy(x => x.TaskGroupName), "TaskGroupId", "TaskGroupName");
             }
             ViewData["TaskTypeId"] = new SelectList(_context.TaskType.OrderBy(x=>x.TaskTypeName), "TaskTypeId", "TaskTypeName");
-     TaskMaster taskMaster = new TaskMaster();
+            TaskMaster taskMaster = new TaskMaster();
             taskMaster.ActiveYn = true;
             return View(taskMaster);
         }

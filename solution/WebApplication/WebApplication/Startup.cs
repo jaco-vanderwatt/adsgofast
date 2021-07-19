@@ -36,10 +36,11 @@ namespace WebApplication
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddApplicationInsightsTelemetry();
-
+         
             services.Configure<ApplicationOptions>(Configuration.GetSection("ApplicationOptions"));
             services.Configure<SecurityModelOptions>(Configuration.GetSection("SecurityModelOptions"));
-            
+            services.Configure<AuthOptions>(Configuration.GetSection("AzureAd"));
+
             //Configure Entity Framework with Token Auth via Interceptor
             services.AddSingleton<AadAuthenticationDbConnectionInterceptor>();
             services.AddDbContext<AdsGoFastContext>((provider, options) =>
@@ -58,28 +59,45 @@ namespace WebApplication
             services.AddHttpClient<AppInsightsContext>(async (s,c) =>
             {
                 var authProvider = s.GetService<AzureAuthenticationCredentialProvider>();
-                var token = await authProvider.GetAzureRestApiToken(new Azure.Core.TokenRequestContext(new string[] { "https://api.applicationinsights.io" }), new System.Threading.CancellationToken());
+                var token = authProvider.GetAzureRestApiToken("https://api.applicationinsights.io");
                 c.DefaultRequestHeaders.Accept.Clear();
                 c.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
             }).SetHandlerLifetime(TimeSpan.FromMinutes(5))  //Set lifetime to five minutes
                 .AddPolicyHandler(GetRetryPolicy());
 
-            services.AddSingleton<AzureAuthenticationCredentialProvider>();
-            services.AddSingleton<AppInsightsContext>();
+            services.AddHttpClient<LogAnalyticsContext>(async (s, c) =>
+            {
+                var authProvider = s.GetService<AzureAuthenticationCredentialProvider>();
+                var token = authProvider.GetAzureRestApiToken("https://api.loganalytics.io");
+                c.DefaultRequestHeaders.Accept.Clear();
+                c.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                c.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            }).SetHandlerLifetime(TimeSpan.FromMinutes(5))  //Set lifetime to five minutes
+                .AddPolicyHandler(GetRetryPolicy());
+
+         
+            services.AddSingleton<AzureAuthenticationCredentialProvider>((provider) =>
+            {
+                var appOptions = provider.GetService<IOptions<ApplicationOptions>>();
+                var authOptions = provider.GetService<IOptions<AuthOptions>>();
+                return new AzureAuthenticationCredentialProvider(appOptions,authOptions);
+            }
+            );
             services.AddSingleton<AdsGoFastDapperContext>();
             services.AddSingleton<ISecurityAccessProvider, SecurityAccessProvider>();
             services.AddTransient<IEntityRoleProvider, EntityRoleProvider>();
             services.AddSingleton<IAuthorizationHandler, PermissionAssignedViaRoleHandler>();
+            services.AddScoped<IAuthorizationHandler, PermissionAssignedViaControllerActionHandler>();
 
             services.AddControllersWithViews(opt =>
             {
-                opt.Filters.Add(new Helpers.DefaultHelpLinkActionFilter());
+                opt.Filters.Add(new DefaultHelpLinkActionFilter());
             }).AddMvcOptions(m => m.ModelMetadataDetailsProviders.Add(new HumanizerMetadataProvider()));
 
             services.AddRazorPages();
 
-            services.AddMicrosoftIdentityWebAppAuthentication(Configuration);
+            services.AddMicrosoftIdentityWebAppAuthentication(Configuration, "AzureAdAuth");
             services.Configure<CookieAuthenticationOptions>(CookieAuthenticationDefaults.AuthenticationScheme, options => options.AccessDeniedPath = "/Home/AccessDenied");
 
             services.AddAuthorization(options =>
