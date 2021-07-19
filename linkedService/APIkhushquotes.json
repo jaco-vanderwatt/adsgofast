@@ -4,7 +4,7 @@
 		"annotations": [],
 		"type": "RestService",
 		"typeProperties": {
-			"url": "https://api.khushquotes.com/quote",
+			"url": "https://api.khushquotes.com",
 			"enableServerCertificateValidation": true,
 			"authenticationType": "Anonymous"
 		}
