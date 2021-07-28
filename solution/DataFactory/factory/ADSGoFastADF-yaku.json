@@ -1,0 +1,9 @@
+{
+	"name": "ADSGoFastADF-yaku",
+	"location": "australiaeast",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "bd6a624c-1ec7-4700-8bef-4d34118ff232",
+		"tenantId": "d3ade6fe-bfe3-49da-b06b-48f6ef2c808f"
+	}
+}
